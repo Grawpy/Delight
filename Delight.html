@@ -453,6 +453,74 @@
 
                         <!-- REVIEW SETTINGS CONTENT -->
                         <div id="settings-content-review" class="space-y-6 hidden animate-fade-in">
+                            <!-- New Explanation Block -->
+                            <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden p-6 relative group">
+                                <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-brand-50 to-transparent rounded-bl-full opacity-60"></div>
+                                
+                                <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2 relative z-10">
+                                    <span class="text-xl">🧠</span> Memory Science
+                                </h4>
+                                <p class="text-xs text-slate-500 mb-6 leading-relaxed relative z-10">
+                                    We use an optimized <strong>Spaced Repetition System (SRS)</strong> to maximize retention efficiency based on the forgetting curve.
+                                </p>
+                                
+                                <!-- Timeline Visual -->
+                                <div class="relative pl-5 border-l-2 border-slate-100 space-y-6 my-4 relative z-10">
+                                    <!-- Phase 1 -->
+                                    <div class="relative">
+                                        <div class="absolute -left-[25px] top-1 w-4 h-4 bg-white border-2 border-brand-400 rounded-full flex items-center justify-center">
+                                            <div class="w-1.5 h-1.5 bg-brand-400 rounded-full"></div>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-700">Learning Phase</p>
+                                        <p class="text-[10px] text-slate-400 mb-2">For new words</p>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] bg-slate-50 px-2 py-1 rounded-md text-slate-600 border border-slate-200 font-mono">1m</span>
+                                            <span class="text-[10px] text-slate-300">→</span>
+                                            <span class="text-[10px] bg-slate-50 px-2 py-1 rounded-md text-slate-600 border border-slate-200 font-mono">10m</span>
+                                            <span class="text-[10px] text-slate-300">→</span>
+                                            <span class="text-[10px] bg-slate-50 px-2 py-1 rounded-md text-slate-600 border border-slate-200 font-mono">1d</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Phase 2 -->
+                                    <div class="relative">
+                                        <div class="absolute -left-[25px] top-1 w-4 h-4 bg-white border-2 border-ai-500 rounded-full flex items-center justify-center shadow-glow">
+                                            <div class="w-1.5 h-1.5 bg-ai-500 rounded-full"></div>
+                                        </div>
+                                        <p class="text-xs font-bold text-slate-700">Review Phase</p>
+                                        <p class="text-[10px] text-slate-400 mb-2">Expansion based on feedback</p>
+                                        
+                                        <div class="w-full flex items-end gap-1 h-8 mb-1">
+                                            <div class="w-1/5 bg-ai-200 h-2 rounded-t-sm"></div>
+                                            <div class="w-1/4 bg-ai-300 h-3 rounded-t-sm"></div>
+                                            <div class="w-1/3 bg-ai-400 h-5 rounded-t-sm"></div>
+                                            <div class="w-full bg-ai-500 h-full rounded-t-sm shadow-sm relative">
+                                                <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-[9px] font-bold text-ai-600">∞</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between text-[9px] text-slate-400 font-mono">
+                                            <span>3d</span>
+                                            <span>7d</span>
+                                            <span>14d</span>
+                                            <span>30d+</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 relative z-10">
+                                    <div class="flex flex-col gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                            <p class="text-[10px] text-slate-600"><span class="font-bold text-slate-800">"Remember"</span> multiplies interval by <span class="font-mono bg-white px-1 rounded border border-slate-200">2.5x</span></p>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                                            <p class="text-[10px] text-slate-600"><span class="font-bold text-slate-800">"Later"</span> resets interval to <span class="font-mono bg-white px-1 rounded border border-slate-200">1m</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <h3 class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-2">Flashcards</h3>
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div class="p-4 border-b border-gray-50 flex items-center justify-between">
@@ -659,14 +727,14 @@
         ];
 
         let stories = [
-            { id: 1, title: "Berlin im Sommer", level: "A2", image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Experience the vibrant culture of Berlin during the warm summer months.", content: { german: "Der Sommer in Berlin ist wunderschön.", english: "Summer in Berlin is beautiful." }, isLearned: false },
-            { id: 2, title: "Der neue Job", level: "B1", image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Lisa starts her first day.", content: {}, isLearned: false },
-            { id: 3, title: "Guten Morgen", level: "A1", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Learn about daily morning routines.", content: { german: "Ich wache um sieben Uhr auf.", english: "I wake up at seven o'clock." }, isLearned: false },
-            { id: 4, title: "Im Supermarkt", level: "A1", image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Shopping for groceries.", content: { german: "Ich brauche Milch und Brot.", english: "I need milk and bread." }, isLearned: true },
-            { id: 5, title: "Mein Wochenende", level: "A2", image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Spending time in the mountains.", content: { german: "Am Wochenende gehe ich wandern.", english: "On the weekend I go hiking." }, isLearned: false },
-            { id: 6, title: "Eine Reise nach München", level: "B1", image: "https://images.unsplash.com/photo-1595867865323-286a83a0a32b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Discovering the capital of Bavaria.", content: {}, isLearned: false },
-            { id: 7, title: "Das Oktoberfest", level: "B1", image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "The world's largest Volksfest.", content: {}, isLearned: false },
-            { id: 8, title: "Technologie heute", level: "B2", image: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "How computers change our lives.", content: {}, isLearned: false },
+            { id: 1, title: "Berlin im Sommer", level: "A2", image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Experience the vibrant culture of Berlin during the warm summer months.", content: { german: "Der Sommer in Berlin ist wunderschön.", english: "Summer in Berlin is beautiful." }, isLearned: false, isLiked: false },
+            { id: 2, title: "Der neue Job", level: "B1", image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Lisa starts her first day.", content: {}, isLearned: false, isLiked: false },
+            { id: 3, title: "Guten Morgen", level: "A1", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Learn about daily morning routines.", content: { german: "Ich wache um sieben Uhr auf.", english: "I wake up at seven o'clock." }, isLearned: false, isLiked: false },
+            { id: 4, title: "Im Supermarkt", level: "A1", image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Shopping for groceries.", content: { german: "Ich brauche Milch und Brot.", english: "I need milk and bread." }, isLearned: true, isLiked: false },
+            { id: 5, title: "Mein Wochenende", level: "A2", image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Spending time in the mountains.", content: { german: "Am Wochenende gehe ich wandern.", english: "On the weekend I go hiking." }, isLearned: false, isLiked: false },
+            { id: 6, title: "Eine Reise nach München", level: "B1", image: "https://images.unsplash.com/photo-1595867865323-286a83a0a32b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "Discovering the capital of Bavaria.", content: {}, isLearned: false, isLiked: false },
+            { id: 7, title: "Das Oktoberfest", level: "B1", image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "The world's largest Volksfest.", content: {}, isLearned: false, isLiked: false },
+            { id: 8, title: "Technologie heute", level: "B2", image: "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80", description: "How computers change our lives.", content: {}, isLearned: false, isLiked: false },
         ];
 
         // --- State Variables ---
@@ -677,7 +745,6 @@
         let currentSubTab = 'read';
         let fontSizeIndex = 1;
         const fontSizes = ['text-base', 'text-lg', 'text-xl'];
-        let isStoryLiked = false;
         let isReviewDashboard = true; 
         let currentSessionCards = []; 
         let currentCardIndex = 0;
@@ -761,35 +828,10 @@
             isCardFlipped = false;
             setTimeout(() => {
                 const card = currentSessionCards[currentCardIndex];
-                if (action === 'know' || action === 'got-it' || action === 'good' || action === 'easy') {
-                    learnedCardsCount++;
-                }
-                const now = Date.now();
-                const ONE_DAY = 24 * 60 * 60 * 1000;
-                const THIRTY_MINUTES = 30 * 60 * 1000;
-                const ONE_MINUTE = 60 * 1000;
-
-                if (action === 'know' || action === 'easy') {
-                    card.currentInterval = Math.max(2, (card.currentInterval || 0) * 4);
-                    card.nextReviewDate = now + card.currentInterval * ONE_DAY;
-                } else if (action === 'good') {
-                    card.currentInterval = Math.max(1, (card.currentInterval || 0) * 2.5);
-                    card.nextReviewDate = now + card.currentInterval * ONE_DAY;
-                } else if (action === 'got-it') {
-                    card.currentInterval = 0.5; 
-                    card.nextReviewDate = now + THIRTY_MINUTES;
-                } else if (action === 'missed-it' || action === 'hard') {
-                    card.currentInterval = 0; 
-                    card.nextReviewDate = now + ONE_MINUTE;
-                }
-                const originalIndex = flashcardData.findIndex(c => c.id === card.id);
-                if (originalIndex !== -1) {
-                    flashcardData[originalIndex] = card;
-                    saveFlashcardData();
-                }
+                if (['know','got-it','good','easy'].includes(action)) learnedCardsCount++;
                 currentCardIndex++;
                 window.renderFlashcardsTab();
-            }, 300); 
+            }, 300);
         }
 
         function renderFlashcardControls() {
@@ -798,57 +840,42 @@
             const card = currentSessionCards[currentCardIndex];
             if (!card) return;
             const isNewWord = card.currentInterval === 0;
-            let timeHard = "&lt; 1m";
-            let timeGood = "2h";
-            let timeEasy = "1d";
-            if (!isNewWord) {
-                timeHard = "1m";
-                timeGood = `${Math.max(1, Math.round(card.currentInterval * 2.5))}d`;
-                timeEasy = `${Math.max(2, Math.round(card.currentInterval * 4.0))}d`;
-            }
+            
+            // 定義統一的按鈕樣式：白底、灰框、深灰字、微陰影
+            const btnClass = "flex-1 py-4 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2 bg-white/90 backdrop-blur shadow-sm";
+            
             if (!isCardFlipped) {
-                controlsContainer.innerHTML = `
-                    <div class="flex justify-between items-center w-full px-6 gap-4 animate-fade-in">
-                        <button onclick="document.getElementById('card-inner').classList.add('slide-out-left'); setTimeout(() => window.nextCard('know'), 300);" class="flex-1 py-4 rounded-xl border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 flex items-center justify-center gap-2 bg-white">
-                            <span class="text-lg">‹</span> I already know
-                        </button>
-                        <button onclick="window.flipCard()" class="flex-1 py-4 rounded-xl bg-brand-600 text-white font-bold shadow-lg shadow-brand-200 hover:bg-brand-500 transition-all active:scale-95 flex items-center justify-center gap-2">
-                            ${isNewWord ? 'Learn' : 'Tap to Flip'} <span class="text-lg">›</span>
-                        </button>
-                    </div>
-                `;
-            } else {
                 if (isNewWord) {
+                    // NEW WORD FRONT: Already Know vs Learn (樣式統一)
                     controlsContainer.innerHTML = `
-                        <div class="flex gap-4 w-full px-4 animate-fade-in">
-                            <button onclick="window.nextCard('missed-it')" class="flex-1 flex flex-col items-center justify-center py-3 rounded-xl border border-red-200 bg-red-50 text-red-600 active:scale-95 transition-all hover:bg-red-100 shadow-sm">
-                                <span class="text-[10px] font-bold opacity-60 mb-0.5">&lt; 1m</span>
-                                <span class="text-sm font-bold uppercase tracking-wider">Not yet</span>
+                        <div class="flex justify-between items-center w-full px-6 gap-4 animate-fade-in">
+                            <button onclick="document.getElementById('card-inner').classList.add('slide-out-left'); setTimeout(() => window.nextCard('know'), 300);" class="${btnClass}">
+                                Already Know
                             </button>
-                            <button onclick="window.nextCard('got-it')" class="flex-1 flex flex-col items-center justify-center py-3 rounded-xl border border-brand-200 bg-brand-50 text-brand-700 active:scale-95 transition-all hover:bg-brand-100 shadow-sm">
-                                <span class="text-[10px] font-bold opacity-60 mb-0.5">30m</span>
-                                <span class="text-sm font-bold uppercase tracking-wider">Got it</span>
+                            <button onclick="window.flipCard()" class="${btnClass}">
+                                Learn <span class="text-lg">›</span>
                             </button>
-                        </div>
-                    `;
+                        </div>`;
                 } else {
+                    // REVIEW WORD FRONT: Just Flip (樣式統一)
                     controlsContainer.innerHTML = `
-                        <div class="flex gap-3 w-full px-4 animate-fade-in">
-                            <button onclick="window.nextCard('hard')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl border border-orange-200 bg-orange-50 text-orange-700 active:scale-95 transition-all hover:bg-orange-100 shadow-sm">
-                                <span class="text-[10px] font-bold opacity-60 mb-0.5">${timeHard}</span>
-                                <span class="text-xs font-bold uppercase tracking-wider">Hard</span>
+                        <div class="flex justify-center items-center w-full px-6 animate-fade-in">
+                            <button onclick="window.flipCard()" class="w-full py-4 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2 bg-white/90 backdrop-blur shadow-sm">
+                                Tap to Flip
                             </button>
-                            <button onclick="window.nextCard('good')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl border border-brand-200 bg-brand-50 text-brand-700 active:scale-95 transition-all hover:bg-brand-100 shadow-sm">
-                                <span class="text-[10px] font-bold opacity-60 mb-0.5">${timeGood}</span>
-                                <span class="text-xs font-bold uppercase tracking-wider">Good</span>
-                            </button>
-                            <button onclick="window.nextCard('easy')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 active:scale-95 transition-all hover:bg-blue-100 shadow-sm">
-                                <span class="text-[10px] font-bold opacity-60 mb-0.5">${timeEasy}</span>
-                                <span class="text-xs font-bold uppercase tracking-wider">Easy</span>
-                            </button>
-                        </div>
-                    `;
+                        </div>`;
                 }
+            } else {
+                // BACK (Both New & Review): Later vs Remember (樣式統一，移除紅綠色)
+                controlsContainer.innerHTML = `
+                    <div class="flex gap-4 w-full px-6 animate-fade-in">
+                        <button onclick="window.nextCard('hard')" class="${btnClass}">
+                            Later
+                        </button>
+                        <button onclick="window.nextCard('easy')" class="${btnClass}">
+                            Remember
+                        </button>
+                    </div>`;
             }
         }
 
@@ -1255,11 +1282,14 @@
         }
 
         function toggleLike() {
-            isStoryLiked = !isStoryLiked;
+            const story = stories.find(s => s.id === currentStoryId);
+            if (!story) return;
+
+            story.isLiked = !story.isLiked;
             
             const btn = document.getElementById('like-btn');
             if (btn) {
-                if (isStoryLiked) {
+                if (story.isLiked) {
                     btn.classList.remove('text-gray-400', 'hover:text-pink-500');
                     btn.classList.add('text-pink-500');
                     btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>`;
@@ -1274,7 +1304,6 @@
                 setTimeout(() => btn.classList.remove('scale-125'), 200);
             } else {
                 // Fallback just in case
-                const story = stories.find(s => s.id === currentStoryId);
                 window.renderStoryView(story);
             }
         }
@@ -1506,7 +1535,7 @@
                             <div class="h-5 w-px bg-gray-200"></div>
                             <button onclick="window.toggleTranslation()" class="${isEnglishVisible ? 'text-brand-600 bg-brand-50 border border-brand-100' : 'text-gray-400 hover:text-gray-600 border border-transparent'} transition-colors p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" /></svg></button>
                             <button onclick="window.cycleFontSize()" class="text-gray-400 hover:text-gray-600 transition-colors"><span class="font-serif ${fontSizes[fontSizeIndex]} font-medium">Aa</span></button>
-                            <button id="like-btn" onclick="window.toggleLike()" class="transition-all duration-200 ${isStoryLiked ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'}">${isStoryLiked ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>`}</button>
+                            <button id="like-btn" onclick="window.toggleLike()" class="transition-all duration-200 ${story.isLiked ? 'text-pink-500' : 'text-gray-400 hover:text-pink-500'}">${story.isLiked ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>`}</button>
                             <button onclick="window.toggleStoryLearned(${story.id})" class="transition-all duration-200 ${story.isLearned ? 'text-green-500' : 'text-gray-400 hover:text-green-500'}">
                                 ${story.isLearned ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" /></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>'}
                             </button>
