@@ -380,6 +380,22 @@
 
                         <!-- REVIEW SETTINGS CONTENT -->
                         <div id="settings-content-review" class="space-y-6 hidden animate-fade-in">
+                             <!-- SRS 演算法說明面板 -->
+                             <div class="bg-gradient-to-br from-brand-50 to-emerald-50 p-5 rounded-2xl border border-brand-100 shadow-sm">
+                                 <!-- 已移除標題旁邊的圖示/Emoji -->
+                                 <h3 class="text-sm font-bold text-brand-800 mb-2">
+                                     Spaced Repetition Algorithm
+                                 </h3>
+                                 <p class="text-xs text-gray-600 leading-relaxed mb-3">To maximize memory retention, we use a scientifically proven spacing schedule. New words will reappear after:</p>
+                                 <div class="flex flex-wrap gap-2 mb-3">
+                                     <span class="px-2.5 py-1 bg-white rounded-lg text-xs font-bold text-brand-600 shadow-sm border border-brand-100">30 mins</span>
+                                     <span class="px-2.5 py-1 bg-white rounded-lg text-xs font-bold text-brand-600 shadow-sm border border-brand-100">2 hrs</span>
+                                     <span class="px-2.5 py-1 bg-white rounded-lg text-xs font-bold text-brand-600 shadow-sm border border-brand-100">6 hrs</span>
+                                     <span class="px-2.5 py-1 bg-white rounded-lg text-xs font-bold text-brand-600 shadow-sm border border-brand-100">24 hrs</span>
+                                 </div>
+                                 <p class="text-xs text-gray-500 italic">After the first day, intervals dynamically increase based on how well you remember them!</p>
+                             </div>
+
                              <h3 class="text-xs font-bold text-brand-600 uppercase tracking-wider mb-2">Review Settings</h3>
                              <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div class="p-4 border-b border-gray-50 flex items-center justify-between">
@@ -633,6 +649,42 @@
         window.lastAnswerStatus = null; 
         window.selectedQuizOption = null;
 
+        // --- 新增：SRS 間隔排程系統 (毫秒) ---
+        const SRS_INTERVALS = [
+            0,                          // 0: New word
+            30 * 60 * 1000,             // 1: 30 minutes
+            2 * 60 * 60 * 1000,         // 2: 2 hours
+            6 * 60 * 60 * 1000,         // 3: 6 hours
+            24 * 60 * 60 * 1000,        // 4: 24 hours
+            3 * 24 * 60 * 60 * 1000,    // 5: 3 days
+            7 * 24 * 60 * 60 * 1000,    // 6: 1 week
+            14 * 24 * 60 * 60 * 1000,   // 7: 2 weeks
+            30 * 24 * 60 * 60 * 1000    // 8: 1 month
+        ];
+
+        // 負責將使用者的回饋寫入資料庫，排定下次複習時間
+        function updateCardSRS(cardId, action) {
+            const card = flashcardData.find(c => c.id === cardId);
+            if (!card) return;
+
+            if (action === 'know') {
+                // 如果是新單字但已經認識，直接跳到 24小時 級別
+                card.currentInterval = 4; 
+                card.nextReviewDate = Date.now() + SRS_INTERVALS[4];
+            } else if (action === 'remember') {
+                // 成功記住：推進到下一個級別 (最高不超過陣列長度)
+                card.currentInterval = Math.min((card.currentInterval || 0) + 1, SRS_INTERVALS.length - 1);
+                card.nextReviewDate = Date.now() + SRS_INTERVALS[card.currentInterval];
+            } else if (action === 'again') {
+                // 忘記了：將級別降回 0，讓他等一下答對時會變成級別 1 (30 mins)
+                card.currentInterval = 0; 
+                // 這裡不設定 nextReviewDate，因為他必須在這次 session 答對後才會排程
+            }
+            
+            // 儲存進度到瀏覽器中
+            localStorage.setItem(DB_KEY, JSON.stringify(flashcardData));
+        }
+
         // Flashcard Settings
         window.reviewFrontSide = localStorage.getItem('reviewFrontSide') || 'random';
         window.setReviewFrontSide = function(val) {
@@ -770,10 +822,15 @@
         function nextCard(action) {
             window.isCardFlipped = false;
             window.reviewMode = 'menu';
+            // 抓取當前操作的卡片
+            const currentCard = window.currentSessionCards[window.currentCardIndex];
+            
             setTimeout(() => {
                 if (window.currentSessionType === 'new') {
                     if (action === 'learn') {
-                        window.learnedJustNow.push(window.currentSessionCards[window.currentCardIndex]);
+                        window.learnedJustNow.push(currentCard);
+                    } else if (action === 'know') {
+                        window.updateCardSRS(currentCard.id, 'know'); // 標記為已懂
                     }
                     // 新學習模式下，無論 Know 還是 Learn 都算完成這張卡的當前階段，增加完成數
                     window.learnedCardsCount++;
@@ -799,11 +856,12 @@
                     }
                 } else {
                     if (['remember', 'know', 'got-it', 'easy'].includes(action)) {
+                        window.updateCardSRS(currentCard.id, 'remember'); // 答對了，排程推遲
                         window.learnedCardsCount++;
                         window.currentCardIndex++;
                     } else if (['again', 'missed', 'hard'].includes(action)) {
-                        const currentCard = window.currentSessionCards[window.currentCardIndex];
-                        window.currentSessionCards.push(currentCard);
+                        window.updateCardSRS(currentCard.id, 'again'); // 答錯了，重置排程
+                        window.currentSessionCards.push(currentCard); // 塞回佇列尾端再測一次
                         window.currentCardIndex++;
                     } else {
                         window.currentCardIndex++;
@@ -2460,6 +2518,7 @@
         window.closeAIModal = closeAIModal;
         window.openCreateStoryModal = openCreateStoryModal; 
         window.toggleSentence = toggleSentence;
+        window.updateCardSRS = updateCardSRS; // 註冊到全域
         window.startSession = startSession;
         window.nextCard = nextCard;
         window.flipCard = flipCard;
