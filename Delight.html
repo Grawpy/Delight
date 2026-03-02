@@ -207,13 +207,12 @@
                 </svg>
                 <span class="text-[10px] font-bold uppercase tracking-wide">Stories</span>
             </button>
-            <button onclick="window.switchTab('vocabulary')" id="nav-vocabulary" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group">
-                <div class="absolute top-0 w-1/2 h-0.5 bg-transparent rounded-b-full transition-all duration-300" id="indicator-vocabulary"></div>
+            <button onclick="window.switchTab('speech')" id="nav-speech" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group">
+                <div class="absolute top-0 w-1/2 h-0.5 bg-transparent rounded-b-full transition-all duration-300" id="indicator-speech"></div>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1 transition-transform group-active:scale-90">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10v4M6 8v8M9 5v14M12 3v18M15 7v10M18 5v14M21 9v6" />
                 </svg>
-                <span class="text-[10px] font-bold uppercase tracking-wide">Vocab</span>
+                <span class="text-[10px] font-bold uppercase tracking-wide">Speech</span>
             </button>
             <button onclick="window.switchTab('flashcards')" id="nav-flashcards" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group">
                 <div class="absolute top-0 w-1/2 h-0.5 bg-transparent rounded-b-full transition-all duration-300" id="indicator-flashcards"></div>
@@ -657,7 +656,311 @@
         window.lastAnswerStatus = null; 
         window.selectedQuizOption = null;
 
-        // --- 新增：SRS 間隔排程系統 (毫秒) ---
+        window.isVocabView = false;
+
+        // --- New: A2+ Speech slot-based exercise (3 stages) ---
+        window.speechExercises = [
+            {
+                id: 'ordering-coffee-a2-1',
+                level: 'A2',
+                promptEn:
+                    'You are in a café in Berlin and want to politely order a latte.',
+                sentenceParts: [
+                    { type: 'text', value: 'Ich ' },
+                    { type: 'slot', slotId: 'slot-1' },
+                    { type: 'text', value: ' gern einen ' },
+                    { type: 'slot', slotId: 'slot-2' },
+                    { type: 'text', value: ' Latte, ' },
+                    { type: 'slot', slotId: 'slot-3' }
+                ],
+                slots: [
+                    {
+                        id: 'slot-1',
+                        index: 0,
+                        options: [
+                            { id: 'opt-1-correct', value: 'hätte', isCorrect: true },
+                            {
+                                id: 'opt-1-distractor-1',
+                                value: 'habe',
+                                isCorrect: false,
+                                errorMessage:
+                                    'Here you need Konjunktiv II to sound polite. Use “hätte” instead of “habe”.'
+                            },
+                            {
+                                id: 'opt-1-distractor-2',
+                                value: 'will',
+                                isCorrect: false,
+                                errorMessage:
+                                    '“will” is very direct, almost like a command. In ordering situations use “hätte gern” to sound more polite.'
+                            }
+                        ],
+                        spellingHint:
+                            'You are very close. Double‑check the conjugation and umlaut in “hätte”.'
+                    },
+                    {
+                        id: 'slot-2',
+                        index: 1,
+                        options: [
+                            { id: 'opt-2-correct', value: 'großen', isCorrect: true },
+                            {
+                                id: 'opt-2-distractor-1',
+                                value: 'groß',
+                                isCorrect: false,
+                                errorMessage:
+                                    'After “einen” the adjective must be in the accusative form: use “großen” instead of “groß”.'
+                            },
+                            {
+                                id: 'opt-2-distractor-2',
+                                value: 'große',
+                                isCorrect: false,
+                                errorMessage:
+                                    'This is masculine accusative (einen Latte), so the adjective should end in “‑en”: großen.'
+                            }
+                        ],
+                        spellingHint:
+                            'Pay attention to the “ß” and the accusative ending. It should be written “großen”.'
+                    },
+                    {
+                        id: 'slot-3',
+                        index: 2,
+                        options: [
+                            { id: 'opt-3-correct', value: 'bitte', isCorrect: true },
+                            {
+                                id: 'opt-3-distractor-1',
+                                value: 'danke',
+                                isCorrect: false,
+                                errorMessage:
+                                    '“danke” means “thank you”. At the end of an order you should use “bitte” to stay polite.'
+                            },
+                            {
+                                id: 'opt-3-distractor-2',
+                                value: 'gerne',
+                                isCorrect: false,
+                                errorMessage:
+                                    '“gerne” is typically used by staff replying to a customer. Here you are the customer, so end with “bitte”.'
+                            }
+                        ],
+                        spellingHint:
+                            'You are almost there. Check the double consonant and letter order in “bitte”.'
+                    }
+                ],
+                fullAnswer: 'Ich hätte gern einen großen Latte, bitte.',
+                fullSentenceSpellingHint:
+                    'Your sentence structure is very close. Check the verb form (hätte), the adjective ending (großen), and the spelling of the politeness phrase (bitte).'
+            }
+        ];
+
+        // Global state for the three-stage exercise
+        window.currentSpeechIndex = 0;
+        window.speechStage = 'slot-machine'; // 'slot-machine' | 'blind-fill' | 'full-sentence'
+        window.speechSelections = {}; // { [slotId]: optionId }
+        window.speechInputs = {}; // { [slotId]: typedValue }
+        window.speechFullSentenceInput = '';
+        window.speechFeedback = null; // { isCorrect: boolean, message?: string }
+        window.activeSpeechSlotId = null; // slot currently opened in the picker
+
+        function speechNormalize(value) {
+            return value.trim().toLowerCase();
+        }
+
+        function speechLevenshtein(a, b) {
+            const m = a.length;
+            const n = b.length;
+            if (m === 0) return n;
+            if (n === 0) return m;
+
+            const dp = Array.from({ length: m + 1 }, () =>
+                Array(n + 1).fill(0)
+            );
+
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j] + 1,
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+
+            return dp[m][n];
+        }
+
+        function getCurrentSpeechExercise() {
+            return window.speechExercises[window.currentSpeechIndex];
+        }
+
+        function validateStageSlotMachine(ex) {
+            for (const slot of ex.slots) {
+                const selectedOptionId = window.speechSelections[slot.id];
+                const option = slot.options.find(o => o.id === selectedOptionId);
+                const correct = slot.options.find(o => o.isCorrect);
+
+                if (!correct) continue;
+
+                if (!option || !option.isCorrect) {
+                    if (option && option.errorMessage) {
+                        return { isCorrect: false, message: option.errorMessage };
+                    }
+                    return {
+                        isCorrect: false,
+                        message:
+                            'Take another look at the grammar and verb forms in each blank.'
+                    };
+                }
+            }
+
+            return { isCorrect: true };
+        }
+
+        function validateStageBlindFill(ex) {
+            for (const slot of ex.slots) {
+                const rawInput = window.speechInputs[slot.id] || '';
+                const normalizedInput = speechNormalize(rawInput);
+
+                const correctOption = slot.options.find(o => o.isCorrect);
+                if (!correctOption) continue;
+
+                const correctValue = speechNormalize(correctOption.value);
+
+                if (!normalizedInput) {
+                    return {
+                        isCorrect: false,
+                        message:
+                            'Try filling in every blank first. It is okay to make an educated guess.'
+                    };
+                }
+
+                if (normalizedInput === correctValue) {
+                    continue;
+                }
+
+                const matchedDistractor = slot.options.find(
+                    o => !o.isCorrect && speechNormalize(o.value) === normalizedInput
+                );
+
+                if (matchedDistractor && matchedDistractor.errorMessage) {
+                    return {
+                        isCorrect: false,
+                        message: matchedDistractor.errorMessage
+                    };
+                }
+
+                const distance = speechLevenshtein(normalizedInput, correctValue);
+                if (distance <= 2) {
+                    return {
+                        isCorrect: false,
+                        message: slot.spellingHint
+                    };
+                }
+
+                return {
+                    isCorrect: false,
+                    message:
+                        'The grammar and spelling are a bit off. Think about the base form, conjugation, and case endings.'
+                };
+            }
+
+            return { isCorrect: true };
+        }
+
+        function validateStageFullSentence(ex) {
+            const normalizedUser = speechNormalize(window.speechFullSentenceInput);
+            const normalizedAnswer = speechNormalize(ex.fullAnswer);
+
+            if (!normalizedUser) {
+                return {
+                    isCorrect: false,
+                    message:
+                        'Start by writing a full German sentence. It is fine if it is just a first draft.'
+                };
+            }
+
+            if (normalizedUser === normalizedAnswer) {
+                return { isCorrect: true };
+            }
+
+            const distance = speechLevenshtein(normalizedUser, normalizedAnswer);
+            if (distance <= 4) {
+                return {
+                    isCorrect: false,
+                    message: ex.fullSentenceSpellingHint
+                };
+            }
+
+            return {
+                isCorrect: false,
+                message:
+                    'The overall structure and word choice are quite different. Try rebuilding a simple sentence: subject + verb + object, then add the politeness phrase.'
+            };
+        }
+
+        window.validateSpeechExercise = function () {
+            const ex = getCurrentSpeechExercise();
+            let result;
+
+            if (window.speechStage === 'slot-machine') {
+                result = validateStageSlotMachine(ex);
+            } else if (window.speechStage === 'blind-fill') {
+                result = validateStageBlindFill(ex);
+            } else {
+                result = validateStageFullSentence(ex);
+            }
+
+            window.speechFeedback = result;
+            window.renderSpeechExerciseView();
+        };
+
+        window.setSpeechStage = function (stage) {
+            window.speechStage = stage;
+            window.speechFeedback = null;
+            window.renderSpeechExerciseView();
+        };
+
+        window.handleSpeechSlotClick = function (slotId) {
+            window.activeSpeechSlotId =
+                window.activeSpeechSlotId === slotId ? null : slotId;
+            window.speechFeedback = null;
+            window.renderSpeechExerciseView();
+        };
+
+        window.handleSpeechSlotSelectOption = function (slotId, optionId) {
+            window.speechSelections[slotId] = optionId;
+            window.activeSpeechSlotId = null;
+            window.speechFeedback = null;
+            window.renderSpeechExerciseView();
+        };
+
+        window.handleSpeechInputChange = function (slotId, value) {
+            window.speechInputs[slotId] = value;
+            window.speechFeedback = null;
+        };
+
+        window.handleSpeechFullSentenceChange = function (value) {
+            window.speechFullSentenceInput = value;
+            window.speechFeedback = null;
+        };
+
+        window.resetSpeechExercise = function () {
+            window.speechSelections = {};
+            window.speechInputs = {};
+            window.speechFullSentenceInput = '';
+            window.speechFeedback = null;
+            window.activeSpeechSlotId = null;
+            window.speechStage = 'slot-machine';
+            window.renderSpeechExerciseView();
+        };
+
+        window.initSpeechSession = function () {
+            window.currentSpeechIndex = 0;
+            window.resetSpeechExercise();
+        };
+
+        // --- SRS 間隔排程系統 (毫秒) ---
         const SRS_INTERVALS = [
             0,                          // 0: New word
             30 * 60 * 1000,             // 1: 30 minutes
@@ -759,6 +1062,11 @@
                         isScrolling = true; // 確定是在上下滾動
                         isSwiping = false;  // 放棄左右滑動攔截
                         card.style.transform = '';
+                        // 重置按鈕樣式
+                        const btnLeft = document.getElementById('btn-swipe-left');
+                        const btnRight = document.getElementById('btn-swipe-right');
+                        if (btnLeft) btnLeft.style = '';
+                        if (btnRight) btnRight.style = '';
                         return;
                     }
                 }
@@ -773,6 +1081,35 @@
                 currentX = clientX;
                 const rotate = deltaX * 0.05;
                 card.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
+
+                // 視覺回饋：根據滑動方向與距離改變按鈕顏色
+                const btnLeft = document.getElementById('btn-swipe-left');
+                const btnRight = document.getElementById('btn-swipe-right');
+                const percentage = Math.min(Math.abs(deltaX) / 100, 1);
+
+                if (deltaX < 0) { 
+                    // 向左滑動 (Already Know / Remember) -> 綠色
+                    if (btnLeft) {
+                        btnLeft.style.backgroundColor = `rgba(16, 185, 129, ${percentage})`; // emerald-500
+                        btnLeft.style.color = percentage > 0.3 ? 'white' : '';
+                        btnLeft.style.borderColor = `rgba(16, 185, 129, ${Math.max(0.2, percentage)})`;
+                    }
+                    if (btnRight) {
+                        btnRight.style.opacity = 1 - percentage;
+                        btnRight.style.transform = `scale(${1 - percentage * 0.1})`;
+                    }
+                } else { 
+                    // 向右滑動 (Learn / Again) -> 灰色
+                    if (btnRight) {
+                        btnRight.style.backgroundColor = `rgba(75, 85, 99, ${percentage})`; // gray-600
+                        btnRight.style.color = percentage > 0.3 ? 'white' : '';
+                        btnRight.style.borderColor = `rgba(75, 85, 99, ${Math.max(0.2, percentage)})`;
+                    }
+                    if (btnLeft) {
+                        btnLeft.style.opacity = 1 - percentage;
+                        btnLeft.style.transform = `scale(${1 - percentage * 0.1})`;
+                    }
+                }
             };
 
             const handleEnd = () => {
@@ -792,6 +1129,11 @@
                     setTimeout(() => window.nextCard(action), 200);
                 } else {
                     card.style.transform = ''; // 滑動距離不夠，歸位
+                    // 重置按鈕樣式
+                    const btnLeft = document.getElementById('btn-swipe-left');
+                    const btnRight = document.getElementById('btn-swipe-right');
+                    if (btnLeft) btnLeft.style = '';
+                    if (btnRight) btnRight.style = '';
                 }
             };
 
@@ -1114,23 +1456,18 @@
                             </div>
                         </div>
                         
-                        <div class="px-6 pt-2 pb-8 grid grid-cols-3 items-center w-full z-10 bg-gray-50 shrink-0">
-                            <div class="flex justify-center">
-                                <!-- 按鈕點擊的延遲時間從 300ms 縮短為 200ms -->
-                                <button onclick="document.getElementById('card-inner').classList.add('slide-out-left'); setTimeout(() => window.nextCard('know'), 200);" translate="no" class="text-gray-500 hover:text-emerald-600 font-bold text-sm hover:scale-105 transition-all active:scale-95 py-2">
-                                    Already Know
-                                </button>
-                            </div>
-                            <div class="flex items-center justify-center gap-4 text-gray-300 pointer-events-none">
+                        <div class="px-6 pt-2 pb-8 grid grid-cols-2 gap-4 items-center w-full z-10 bg-gray-50 shrink-0">
+                            <!-- LEFT: Already Know (Green) -->
+                            <button id="btn-swipe-left" onclick="document.getElementById('card-inner').classList.add('slide-out-left'); setTimeout(() => window.nextCard('know'), 200);" translate="no" class="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border-2 border-emerald-100 text-emerald-600 hover:bg-emerald-50 transition-all active:scale-95 bg-white">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                                Already Know
+                            </button>
+
+                            <!-- RIGHT: Learn (Grey) -->
+                            <button id="btn-swipe-right" onclick="document.getElementById('card-inner').classList.add('slide-out-right'); setTimeout(() => window.nextCard('learn'), 200);" translate="no" class="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:bg-gray-100 transition-all active:scale-95 bg-white">
+                                Learn
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                            </div>
-                            <div class="flex justify-center">
-                                <!-- 按鈕點擊的延遲時間從 300ms 縮短為 200ms -->
-                                <button onclick="document.getElementById('card-inner').classList.add('slide-out-right'); setTimeout(() => window.nextCard('learn'), 200);" translate="no" class="text-gray-500 hover:text-brand-500 font-bold text-sm hover:scale-105 transition-all active:scale-95 py-2">
-                                    Learn
-                                </button>
-                            </div>
+                            </button>
                         </div>
                     </div>`;
             } else {
@@ -1252,23 +1589,18 @@
                             </div>
                         </div>
 
-                        <div class="px-6 pt-2 pb-8 grid grid-cols-3 items-center w-full z-10 bg-gray-50 shrink-0">
-                            <div class="flex justify-center">
-                                <!-- 按鈕點擊的延遲時間從 300ms 縮短為 200ms -->
-                                <button onclick="document.getElementById('card-inner').classList.add('slide-out-left'); setTimeout(() => window.nextCard('remember'), 200);" translate="no" class="text-gray-500 hover:text-emerald-600 font-bold text-sm hover:scale-105 transition-all active:scale-95 py-2">
-                                    Remember
-                                </button>
-                            </div>
-                            <div class="flex items-center justify-center gap-4 text-gray-300 pointer-events-none">
+                        <div class="px-6 pt-2 pb-8 grid grid-cols-2 gap-4 items-center w-full z-10 bg-gray-50 shrink-0">
+                            <!-- LEFT: Remember (Green) -->
+                            <button id="btn-swipe-left" onclick="document.getElementById('card-inner').classList.add('slide-out-left'); setTimeout(() => window.nextCard('remember'), 200);" translate="no" class="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border-2 border-emerald-100 text-emerald-600 hover:bg-emerald-50 transition-all active:scale-95 bg-white">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                                Remember
+                            </button>
+
+                            <!-- RIGHT: Again (Grey) -->
+                            <button id="btn-swipe-right" onclick="document.getElementById('card-inner').classList.add('slide-out-right'); setTimeout(() => window.nextCard('again'), 200);" translate="no" class="flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:bg-gray-100 transition-all active:scale-95 bg-white">
+                                Again
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                            </div>
-                            <div class="flex justify-center">
-                                <!-- 按鈕點擊的延遲時間從 300ms 縮短為 200ms -->
-                                <button onclick="document.getElementById('card-inner').classList.add('slide-out-right'); setTimeout(() => window.nextCard('again'), 200);" translate="no" class="text-gray-500 hover:text-amber-500 font-bold text-sm hover:scale-105 transition-all active:scale-95 py-2">
-                                    Again
-                                </button>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1330,12 +1662,12 @@
                     
                     <h3 class="text-lg font-bold text-gray-800 mb-4 tracking-tight">Extra modes</h3>
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-                        <div class="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" onclick="window.switchTab('vocabulary')">
+                        <div class="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" onclick="window.openVocabularyView()">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
                                 </div>
-                                <h3 class="font-bold text-gray-800 text-lg">Browse flashcards</h3>
+                                <h3 class="font-bold text-gray-800 text-lg">Vocabulary</h3>
                             </div>
                         </div>
                     </div>
@@ -1436,7 +1768,7 @@
                     </div>
                  `;
              }
-             
+
              const q = window.currentQuizData[window.currentQuizIndex];
              const progress = ((window.currentQuizIndex) / window.currentQuizData.length) * 100;
              
@@ -1563,6 +1895,12 @@
             if (!container) return;
             container.scrollTop = 0;
 
+            // 確保在從 Review 切換過來時，導覽列維持顯示
+            const header = document.getElementById('top-bar');
+            const nav = document.querySelector('nav');
+            if (header) header.classList.remove('hidden');
+            if (nav) nav.classList.remove('translate-y-full');
+
             // 初始化分類資料，並加入 words 陣列來儲存生字
             if (!window.vocabCategories) {
                 window.vocabCategories = [
@@ -1589,7 +1927,10 @@
             container.innerHTML = `
                 <div class="flex flex-col h-full bg-gray-50">
                     <div class="px-6 pt-6 pb-2 bg-white sticky top-0 z-10 border-b border-gray-50">
-                        <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-3 mb-4">
+                            <button onclick="window.isVocabView=false; window.isReviewDashboard=true; window.renderFlashcardsTab();" class="p-2 -ml-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5" /></svg>
+                            </button>
                             <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Vocabulary</h2>
                         </div>
                         <div class="relative mb-2">
@@ -2015,10 +2356,682 @@
             }
         }
 
+        window.openVocabularyView = function() {
+            window.isVocabView = true;
+            window.renderVocabularyTab();
+        };
+
+        function renderSpeechTab() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            container.scrollTop = 0;
+
+            container.innerHTML = `
+                <div class="p-6 pb-24 bg-gray-50 min-h-full animate-fade-in">
+                    <!-- Title + 今日任務 Hero -->
+                    <section class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-800 tracking-tight">Speaking</h2>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">
+                                    Practice real-life German speaking every day.
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                                <span class="font-bold">Today</span>
+                                <div class="w-1 h-1 rounded-full bg-emerald-400"></div>
+                            </div>
+                        </div>
+
+                        <!-- 今日口說任務卡 -->
+                        <div
+                            class="relative w-full rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700 text-white cursor-pointer active:scale-[0.99] transition-transform"
+                            onclick="window.openSpeechSession && window.openSpeechSession()"
+                        >
+                            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top,_white,_transparent)]"></div>
+
+                            <div class="relative p-4 flex items-center gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 shadow-sm shadow-black/10"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2"
+                                        class="w-7 h-7">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 18.75a4.5 4.5 0 004.5-4.5V6.75a4.5 4.5 0 10-9 0v7.5a4.5 4.5 0 004.5 4.5z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M8.25 10.5v.75a3.75 3.75 0 007.5 0v-.75M12 18.75v2.25m0 0H9.75m2.25 0h2.25" />
+                                    </svg>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] font-bold uppercase tracking-wider text-brand-100/80 mb-1">
+                                        Today’s focus
+                                    </p>
+                                    <h3 class="text-lg font-bold leading-snug truncate">
+                                        Practice ordering in a café
+                                    </h3>
+                                    <p class="text-xs text-brand-100/80 mt-0.5">
+                                        2 short dialogues · ~5 minutes
+                                    </p>
+
+                                    <!-- 進度條 -->
+                                    <div class="mt-3">
+                                        <div class="flex items-center justify-between text-[10px] text-brand-100/90 mb-1">
+                                            <span class="font-semibold">Daily Speaking</span>
+                                            <span class="font-bold">40%</span>
+                                        </div>
+                                        <div class="w-full h-1.5 rounded-full bg-white/20 overflow-hidden">
+                                            <div class="h-full w-2/5 rounded-full bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.4)]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CTA 按鈕 -->
+                                <button
+                                    class="ml-2 px-3 py-2 rounded-xl bg-white text-brand-600 text-xs font-bold shadow-card hover:bg-brand-50 active:scale-95 transition-all flex flex-col items-center justify-center gap-1 shrink-0"
+                                >
+                                    <span class="uppercase tracking-wide">Start</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                        fill="currentColor" class="w-4 h-4">
+                                        <path
+                                            d="M5.25 5.653c0-1.427 1.529-2.33 2.78-1.643l9.04 4.847a1.875 1.875 0 010 3.286l-9.04 4.847A1.875 1.875 0 015.25 15.347V5.653z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 繼續練習區塊 -->
+                    <section class="mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                Continue
+                            </h3>
+                            <button
+                                class="text-[11px] font-bold text-gray-400 flex items-center gap-1 hover:text-gray-600"
+                            >
+                                View all
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                    class="w-3.5 h-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <!-- 卡片 1 -->
+                            <button
+                                onclick="window.openSpeechLesson && window.openSpeechLesson('cafe-1')"
+                                class="w-full bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99] relative overflow-hidden"
+                            >
+                                <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
+                                    <span class="text-base font-bold">A2</span>
+                                </div>
+                                <div class="flex-1 min-w-0 text-left">
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                                        Dialogue
+                                    </p>
+                                    <h4 class="font-bold text-gray-800 text-sm leading-snug truncate">
+                                        Ordering coffee at a bakery
+                                    </h4>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">
+                                        1 / 3 dialogues · ~3 min
+                                    </p>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <!-- 小圓形進度 -->
+                                    <div
+                                        class="w-7 h-7 rounded-full border-2 border-brand-200 flex items-center justify-center text-[10px] font-bold text-brand-600"
+                                    >
+                                        34%
+                                    </div>
+                                    <span class="text-[10px] text-gray-400 font-semibold">
+                                        Resume
+                                    </span>
+                                </div>
+                            </button>
+
+                            <!-- 卡片 2 -->
+                            <button
+                                onclick="window.openSpeechLesson && window.openSpeechLesson('smalltalk-1')"
+                                class="w-full bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99] relative overflow-hidden"
+                            >
+                                <div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                                    <span class="text-base font-bold">B1</span>
+                                </div>
+                                <div class="flex-1 min-w-0 text-left">
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                                        Role play
+                                    </p>
+                                    <h4 class="font-bold text-gray-800 text-sm leading-snug truncate">
+                                        Small talk at the office
+                                    </h4>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">
+                                        2 / 4 scenes · ~6 min
+                                    </p>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <div
+                                        class="w-7 h-7 rounded-full border-2 border-emerald-200 flex items-center justify-center text-[10px] font-bold text-emerald-600"
+                                    >
+                                        50%
+                                    </div>
+                                    <span class="text-[10px] text-gray-400 font-semibold">
+                                        Resume
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- 主題分類 Chips -->
+                    <section class="mb-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                Topics
+                            </h3>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                            <button
+                                class="px-4 py-1.5 rounded-full bg-gray-900 text-white text-xs font-bold whitespace-nowrap shadow-sm"
+                            >
+                                All
+                            </button>
+                            <button
+                                class="px-4 py-1.5 rounded-full bg-white text-gray-600 text-xs font-bold whitespace-nowrap border border-gray-200"
+                            >
+                                Daily life
+                            </button>
+                            <button
+                                class="px-4 py-1.5 rounded-full bg-white text-gray-600 text-xs font-bold whitespace-nowrap border border-gray-200"
+                            >
+                                Travel
+                            </button>
+                            <button
+                                class="px-4 py-1.5 rounded-full bg-white text-gray-600 text-xs font-bold whitespace-nowrap border border-gray-200"
+                            >
+                                Work
+                            </button>
+                            <button
+                                class="px-4 py-1.5 rounded-full bg-white text-gray-600 text-xs font-bold whitespace-nowrap border border-gray-200"
+                            >
+                                Exam
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- 推薦口說任務列表 -->
+                    <section>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                Recommended
+                            </h3>
+                            <span class="text-[11px] text-gray-400 font-medium">
+                                6 lessons
+                            </span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <!-- 任務卡 1 -->
+                            <button
+                                onclick="window.openSpeechLesson && window.openSpeechLesson('travel-1')"
+                                class="w-full bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99] relative overflow-hidden"
+                            >
+                                <!-- 左側圖示 -->
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                        class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M2.25 6.75h19.5m-16.5 0V5.25A2.25 2.25 0 017.5 3h9a2.25 2.25 0 012.25 2.25v1.5m-13.5 0h13.5m-14.25 3v7.5A2.25 2.25 0 007.5 19.5h9a2.25 2.25 0 002.25-2.25v-7.5m-13.5 0h13.5" />
+                                    </svg>
+                                </div>
+
+                                <!-- 中間資訊 -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1.5">
+                                        <span
+                                            class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded"
+                                        >
+                                            A2
+                                        </span>
+                                        <span
+                                            class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded"
+                                        >
+                                            Travel
+                                        </span>
+                                    </div>
+                                    <h4 class="font-bold text-gray-800 text-sm leading-snug mb-0.5 truncate">
+                                        At the train station
+                                    </h4>
+                                    <p class="text-[11px] text-gray-400">
+                                        3 dialogues · 8 mins · focus on tickets & directions
+                                    </p>
+                                </div>
+
+                                <!-- 右側進度 / 鎖定狀態 -->
+                                <div class="flex flex-col items-end justify-between gap-1">
+                                    <span class="text-[10px] text-gray-400 font-semibold">
+                                        0% · New
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                        class="w-4 h-4 text-gray-300">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </div>
+                            </button>
+
+                            <!-- 任務卡 2（示範已完成狀態） -->
+                            <button
+                                onclick="window.openSpeechLesson && window.openSpeechLesson('restaurant-1')"
+                                class="w-full bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex gap-3 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99] relative overflow-hidden"
+                            >
+                                <!-- 完成徽章 -->
+                                <div
+                                    class="absolute top-0 right-0 w-8 h-8 bg-green-500 text-white flex items-center justify-center rounded-bl-xl shadow-sm z-10"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                        fill="currentColor" class="w-4 h-4">
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882L9 12.116 7.354 10.47a.75.75 0 10-1.06 1.06L8.47 13.706a.75.75 0 001.06 0l4.327-4.515z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500 shrink-0"
+                                >
+                                    <span class="text-base font-bold">A1</span>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1.5">
+                                        <span
+                                            class="bg-rose-50 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded"
+                                        >
+                                            Food
+                                        </span>
+                                    </div>
+                                    <h4 class="font-bold text-gray-800 text-sm leading-snug mb-0.5 truncate">
+                                        Ordering at a restaurant
+                                    </h4>
+                                    <p class="text-[11px] text-gray-400">
+                                        3 / 3 dialogues · fully completed
+                                    </p>
+                                </div>
+
+                                <div class="flex flex-col items-end justify-between gap-1">
+                                    <span class="text-[10px] text-green-600 font-semibold">
+                                        100% · Done
+                                    </span>
+                                    <span class="text-[10px] text-gray-400">
+                                        Review
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            `;
+        }
+
+        function renderSpeechExerciseView() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            container.scrollTop = 0;
+
+            const ex = window.speechExercises[window.currentSpeechIndex];
+            
+            // 產生已選取區塊 (Target Area) 的 HTML
+            let selectedHtml = window.speechSelected.map(w => `
+                <button onclick="window.toggleSpeechWord('${w.id}', 'selected')" translate="no" class="relative bg-brand-50 text-brand-700 border border-brand-400 rounded px-3 py-1.5 font-bold shadow-sm active:scale-95 transition-all text-lg flex items-center gap-1 group">
+                    ${w.text}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-brand-300 group-hover:text-brand-500 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-1.5 -right-1.5 bg-white rounded-full shadow-sm"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
+                </button>
+            `).join('');
+
+            if (window.speechSelected.length === 0) {
+                selectedHtml = `<p class="text-gray-300 font-medium w-full text-center mt-6">Tap words below to build the sentence</p>`;
+            }
+
+            // 產生待選字庫 (Word Pool) 的 HTML
+            let poolHtml = window.speechPool.map(w => `
+                <button onclick="window.toggleSpeechWord('${w.id}', 'pool')" translate="no" class="bg-white text-gray-700 border-2 border-gray-200 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 rounded-lg px-3 py-2 font-bold shadow-sm active:scale-95 transition-all text-lg">
+                    ${w.text}
+                </button>
+            `).join('');
+
+            // 根據驗證狀態設定 Dropzone 邊框顏色與提示
+            let dropzoneClass = 'border-gray-200 bg-white';
+            let feedbackHtml = '';
+            let buttonHtml = '';
+
+            if (window.speechStatus === 'checked-wrong') {
+                dropzoneClass = 'border-red-400 bg-red-50/50';
+                feedbackHtml = `<div class="flex items-center gap-2 text-red-500 mb-4 animate-bounce-sm font-bold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 5.22z" clip-rule="evenodd" /></svg> Hmm, that doesn't seem quite right. Check the word order!</div>`;
+                buttonHtml = `<button onclick="window.speechStatus='idle'; window.renderSpeechExerciseView();" class="w-full bg-red-100 text-red-600 font-bold py-4 rounded-xl shadow-sm active:scale-95 transition-all text-lg">Try Again</button>`;
+            } else if (window.speechStatus === 'checked-correct') {
+                dropzoneClass = 'border-green-400 bg-green-50/50';
+                feedbackHtml = `<div class="flex items-center gap-2 text-green-600 mb-4 animate-fade-in font-bold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" /></svg> Perfekt! Excellent sentence structure.</div>`;
+                buttonHtml = `<button onclick="window.nextSpeechExercise()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-all text-lg">Continue</button>`;
+            } else {
+                const isReadyToCheck = window.speechSelected.length > 0;
+                buttonHtml = `<button onclick="window.checkSpeechSentence()" class="w-full ${isReadyToCheck ? 'bg-brand-600 text-white shadow-lg shadow-brand-200 active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'} font-bold py-4 rounded-xl transition-all text-lg" ${isReadyToCheck ? '' : 'disabled'}>Check</button>`;
+            }
+
+            container.innerHTML = `
+                <div class="flex flex-col h-full bg-gray-50">
+                    <div class="px-6 pt-6 pb-3 bg-white sticky top-0 z-10 border-b border-gray-100 flex items-center justify-between shrink-0">
+                        <div class="flex items-center gap-3">
+                            <button onclick="window.closeSpeechSession && window.closeSpeechSession()" class="p-2 -ml-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5" /></svg>
+                            </button>
+                            <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10v4M6 8v8M9 5v14M12 3v18M15 7v10M18 5v14M21 9v6" /></svg>
+                            </div>
+                            <div class="flex flex-col">
+                                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Builder</h2>
+                                <p class="text-[11px] text-gray-400 font-medium">TeKaMoLo sentence practice</p>
+                            </div>
+                        </div>
+                        <button onclick="window.showTeKaMoLoHelp()" class="text-[10px] font-bold text-brand-600 bg-brand-50 border border-brand-100 px-2.5 py-1.5 rounded uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all flex items-center gap-1 cursor-pointer">
+                            TeKaMoLo
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                        </button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col relative">
+                        <!-- 英文情境提示 -->
+                        <div class="mb-6 animate-fade-in">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                Translate this
+                                <button onclick="window.playAudio(event)" class="text-brand-500 hover:text-brand-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 01-1.06-1.06 8.25 8.25 0 000-4.244.75.75 0 010-1.06z" /><path d="M15.932 7.757a.75.75 0 011.061 0 4.5 4.5 0 010 6.364.75.75 0 01-1.06-1.061 3 3 0 000-4.244.75.75 0 010-1.06z" /></svg>
+                                </button>
+                            </p>
+                            <h3 class="text-xl font-medium text-gray-800 leading-snug">${ex.en}</h3>
+                        </div>
+
+                        <!-- 句子重組區塊 (Dropzone) -->
+                        <div class="min-h-[120px] p-4 border-2 border-dashed ${dropzoneClass} rounded-2xl mb-4 flex flex-wrap gap-2 items-start content-start transition-colors duration-300 relative">
+                            ${selectedHtml}
+                        </div>
+                        
+                        ${feedbackHtml}
+
+                        <!-- 待選字庫 (Word Pool) -->
+                        <div class="flex flex-wrap gap-2.5 justify-center mt-2 ${window.speechStatus === 'checked-correct' ? 'opacity-50 pointer-events-none' : ''}">
+                            ${poolHtml}
+                        </div>
+                    </div>
+
+                    <!-- 底部驗證按鈕 -->
+                    <div class="p-6 bg-white border-t border-gray-100 shrink-0 pb-8">
+                        ${buttonHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // New A2+ multi-stage Speech exercise view
+        function renderNewSpeechExerciseView() {
+            const container = document.getElementById('main-content');
+            if (!container) return;
+            container.scrollTop = 0;
+
+            const ex = getCurrentSpeechExercise();
+
+            const slotMap = {};
+            ex.slots.forEach(slot => {
+                slotMap[slot.id] = slot;
+            });
+
+            // Render sentence for Stage 1 & 2
+            let sentenceHtml = '';
+            if (window.speechStage === 'slot-machine' || window.speechStage === 'blind-fill') {
+                sentenceHtml = ex.sentenceParts
+                    .map(part => {
+                        if (part.type === 'text') {
+                            return `<span class="text-lg text-gray-900">${part.value}</span>`;
+                        }
+                        const slot = slotMap[part.slotId];
+                        if (!slot) return '';
+
+                        if (window.speechStage === 'slot-machine') {
+                            const selectedOptionId = window.speechSelections[slot.id];
+                            const selected = slot.options.find(o => o.id === selectedOptionId);
+                            const label = selected ? selected.value : '...';
+                            const isActive = window.activeSpeechSlotId === slot.id;
+                            return `
+                                <button
+                                    onclick="window.handleSpeechSlotClick('${slot.id}')"
+                                    class="inline-flex items-center justify-center min-w-[64px] px-3 py-1.5 rounded-xl border text-base font-semibold mx-0.5 ${isActive ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-brand-200 bg-brand-50 text-brand-700'} shadow-sm active:scale-95 transition-all"
+                                >
+                                    <span translate="no">${label}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 ml-1 text-brand-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            `;
+                        }
+
+                        const currentValue = window.speechInputs[slot.id] || '';
+                        return `
+                            <input
+                                type="text"
+                                translate="no"
+                                value="${currentValue.replace(/"/g, '&quot;')}"
+                                oninput="window.handleSpeechInputChange('${slot.id}', this.value)"
+                                class="min-w-[72px] px-3 py-1.5 rounded-xl border border-gray-300 bg-white text-base text-gray-900 mx-0.5 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                            />
+                        `;
+                    })
+                    .join('');
+            }
+
+            // Stage 1 option picker
+            let pickerHtml = '';
+            if (window.speechStage === 'slot-machine' && window.activeSpeechSlotId) {
+                const activeSlot = slotMap[window.activeSpeechSlotId];
+                if (activeSlot) {
+                    const optionsHtml = activeSlot.options
+                        .map(
+                            option => `
+                                <button
+                                    onclick="window.handleSpeechSlotSelectOption('${activeSlot.id}', '${option.id}')"
+                                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-800 hover:border-brand-400 hover:bg-brand-50 active:scale-[0.98] transition-all"
+                                >
+                                    <span translate="no">${option.value}</span>
+                                    ${option.isCorrect
+                                        ? '<span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wide">Best choice</span>'
+                                        : '<span class="w-2 h-2 rounded-full bg-gray-200"></span>'}
+                                </button>
+                            `
+                        )
+                        .join('');
+                    pickerHtml = `
+                        <div class="mt-4 rounded-2xl bg-white border border-gray-100 shadow-card p-3 animate-slide-up">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pick the best word</p>
+                                <button onclick="window.handleSpeechSlotClick('${activeSlot.id}')" class="text-[11px] text-gray-400 hover:text-gray-600 font-semibold">Close</button>
+                            </div>
+                            <div class="space-y-2">
+                                ${optionsHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Feedback banner
+            let feedbackHtml = '';
+            if (window.speechFeedback) {
+                if (window.speechFeedback.isCorrect) {
+                    feedbackHtml = `
+                        <div class="mb-4 rounded-2xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 flex items-center gap-2 text-emerald-700 text-sm font-semibold animate-fade-in">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882L9 11.482 7.354 9.836a.75.75 0 10-1.06 1.06l2.177 2.178a.75.75 0 001.06 0l4.326-4.883z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Great job – everything is correct!</span>
+                        </div>
+                    `;
+                } else {
+                    feedbackHtml = `
+                        <div class="mb-4 rounded-2xl bg-red-50 border border-red-200 px-3 py-2.5 flex items-center gap-2 text-red-600 text-sm font-semibold animate-fade-in">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 011.06 0L10 7.94l.66-.72a.75.75 0 111.08 1.04L11.06 10l.68.72a.75.75 0 11-1.08 1.04L10 12.06l-.66.7a.75.75 0 11-1.08-1.04L8.94 10l-.66-.78a.75.75 0 010-1.06z" clip-rule="evenodd" />
+                            </svg>
+                            <span>${window.speechFeedback.message}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            // Stage controls
+            const stage = window.speechStage;
+            const stageButtonsHtml = `
+                <div class="flex items-center gap-2 bg-gray-100 rounded-full p-1 mt-3">
+                    <button onclick="window.setSpeechStage('slot-machine')" class="flex-1 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide ${stage === 'slot-machine' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-400'}">
+                        Stage 1 · Choices
+                    </button>
+                    <button onclick="window.setSpeechStage('blind-fill')" class="flex-1 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide ${stage === 'blind-fill' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-400'}">
+                        Stage 2 · Typing
+                    </button>
+                    <button onclick="window.setSpeechStage('full-sentence')" class="flex-1 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wide ${stage === 'full-sentence' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-400'}">
+                        Stage 3 · Free
+                    </button>
+                </div>
+            `;
+
+            // Primary action button label
+            const primaryCtaLabel =
+                window.speechFeedback && window.speechFeedback.isCorrect
+                    ? 'Practice again'
+                    : 'Check answer';
+
+            container.innerHTML = `
+                <div class="flex flex-col h-full bg-gray-50">
+                    <div class="px-6 pt-6 pb-3 bg-white sticky top-0 z-10 border-b border-gray-100 flex items-center justify-between shrink-0">
+                        <div class="flex items-center gap-3">
+                            <button onclick="window.closeSpeechSession && window.closeSpeechSession()" class="p-2 -ml-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5" /></svg>
+                            </button>
+                            <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h5l3 4h8v8H4V4z" /></svg>
+                            </div>
+                            <div class="flex flex-col">
+                                <h2 class="text-xl font-bold text-gray-800 tracking-tight">Speaking drill</h2>
+                                <p class="text-[11px] text-gray-400 font-medium">From guided choices to full sentences</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col relative">
+                        <div class="mb-3">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-2">
+                                Situation
+                            </p>
+                            <h3 class="text-base font-semibold text-gray-800 leading-snug">
+                                ${ex.promptEn}
+                            </h3>
+                            ${stageButtonsHtml}
+                        </div>
+
+                        ${feedbackHtml}
+
+                        ${
+                            stage === 'full-sentence'
+                                ? `
+                            <div class="mt-4">
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">
+                                    Say this in German
+                                </label>
+                                <textarea
+                                    class="w-full min-h-[140px] rounded-2xl border border-gray-200 bg-white px-3.5 py-3 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                                    placeholder="Type your full German sentence here..."
+                                    oninput="window.handleSpeechFullSentenceChange(this.value)"
+                                >${window.speechFullSentenceInput.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+                            </div>
+                        `
+                                : `
+                            <div class="mt-4 rounded-2xl border border-gray-100 bg-white px-3.5 py-4">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                    Build the sentence
+                                </p>
+                                <div class="flex flex-wrap items-center gap-y-2">
+                                    ${sentenceHtml}
+                                </div>
+                                ${pickerHtml}
+                            </div>
+                        `
+                        }
+                    </div>
+
+                    <div class="p-6 bg-white border-t border-gray-100 shrink-0 pb-8 space-y-2">
+                        <button
+                            onclick="${
+                                window.speechFeedback && window.speechFeedback.isCorrect
+                                    ? 'window.resetSpeechExercise()'
+                                    : 'window.validateSpeechExercise()'
+                            }"
+                            class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-all text-lg"
+                        >
+                            ${primaryCtaLabel}
+                        </button>
+                        <button
+                            onclick="window.setSpeechStage('full-sentence')"
+                            class="w-full text-xs font-semibold text-gray-400 hover:text-gray-600"
+                        >
+                            Jump to free sentence mode
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openSpeechSession() {
+            const header = document.getElementById('top-bar');
+            const nav = document.querySelector('nav');
+            const container = document.getElementById('main-content');
+
+            if (header) header.classList.add('hidden');
+            if (nav) nav.classList.add('translate-y-full');
+            if (container) container.classList.remove('pb-20');
+
+            window.currentTab = 'speech';
+            window.initSpeechSession();
+        }
+
+        function closeSpeechSession() {
+            const header = document.getElementById('top-bar');
+            const nav = document.querySelector('nav');
+            const container = document.getElementById('main-content');
+
+            if (header) header.classList.remove('hidden');
+            if (nav) nav.classList.remove('translate-y-full');
+            if (container) container.classList.add('pb-20');
+
+            window.currentTab = 'speech';
+            window.speechStatus = 'idle';
+            window.renderSpeechTab();
+        }
+
+        function openSpeechLesson(id) {
+            // 目前所有入口共用同一組練習邏輯；之後可依 id 切換不同題組
+            window.openSpeechSession();
+        }
+
         function switchTab(tab) {
             window.currentTab = tab;
             const navStories = document.getElementById('nav-stories');
-            const navVocab = document.getElementById('nav-vocabulary');
+            const navSpeech = document.getElementById('nav-speech');
             const navFlashcards = document.getElementById('nav-flashcards');
             
             // 確保切換主標籤時恢復導航列（安全機制）
@@ -2031,18 +3044,19 @@
             if (container) container.classList.add('pb-20');
             
             navStories.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group";
-            navVocab.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group";
+            navSpeech.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group";
             navFlashcards.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 hover:text-gray-600 relative group";
 
             if (tab === 'stories') {
                 navStories.className = "flex flex-col items-center justify-center w-1/3 h-full text-brand-600 relative group";
                 renderStoriesTab();
-            } else if (tab === 'vocabulary') {
-                navVocab.className = "flex flex-col items-center justify-center w-1/3 h-full text-brand-600 relative group";
-                renderVocabularyTab();
+            } else if (tab === 'speech') {
+                navSpeech.className = "flex flex-col items-center justify-center w-1/3 h-full text-brand-600 relative group";
+                renderSpeechTab();
             } else {
                 navFlashcards.className = "flex flex-col items-center justify-center w-1/3 h-full text-brand-600 relative group";
                 window.isReviewDashboard = true; 
+                window.isVocabView = false;
                 renderFlashcardsTab();
             }
         }
@@ -2121,6 +3135,61 @@
             if (view) view.classList.add('translate-x-full');
         }
         
+        window.showTeKaMoLoHelp = function() {
+            window.openAIModal(`
+                <div class="p-1 text-left animate-fade-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-gray-800 tracking-tight flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.82 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.496 1.509 1.333 1.509 2.316V18" /></svg>
+                            </div>
+                            TeKaMoLo
+                        </h3>
+                        <button onclick="window.closeAIModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4 leading-relaxed font-medium">
+                        When a German sentence has multiple adverbs or prepositional phrases, they usually follow this order:
+                    </p>
+                    <div class="space-y-2 mb-5">
+                        <!-- Temporal: Blue -->
+                        <div class="flex items-center gap-3 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100">
+                            <span class="font-bold text-blue-600 w-8 text-center text-lg">Te</span>
+                            <div class="flex-1 text-sm"><span class="font-bold text-gray-800">Temporal</span> (Time) <span class="text-gray-500 text-xs block">heute (today)</span></div>
+                        </div>
+                        <!-- Kausal: Purple -->
+                        <div class="flex items-center gap-3 bg-purple-50/50 p-2.5 rounded-xl border border-purple-100">
+                            <span class="font-bold text-purple-600 w-8 text-center text-lg">Ka</span>
+                            <div class="flex-1 text-sm"><span class="font-bold text-gray-800">Kausal</span> (Reason) <span class="text-gray-500 text-xs block">wegen des Jobs (because of the job)</span></div>
+                        </div>
+                        <!-- Modal: Orange -->
+                        <div class="flex items-center gap-3 bg-orange-50/50 p-2.5 rounded-xl border border-orange-100">
+                            <span class="font-bold text-orange-600 w-8 text-center text-lg">Mo</span>
+                            <div class="flex-1 text-sm"><span class="font-bold text-gray-800">Modal</span> (Manner) <span class="text-gray-500 text-xs block">mit dem Zug (by train)</span></div>
+                        </div>
+                        <!-- Lokal: Emerald -->
+                        <div class="flex items-center gap-3 bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">
+                            <span class="font-bold text-emerald-600 w-8 text-center text-lg">Lo</span>
+                            <div class="flex-1 text-sm"><span class="font-bold text-gray-800">Lokal</span> (Place) <span class="text-gray-500 text-xs block">nach Berlin (to Berlin)</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Neutral Background for Example -->
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Example Sentence</p>
+                        <p class="text-[15px] text-gray-800 leading-relaxed font-medium">
+                            Ich fahre 
+                            <span class="font-bold text-blue-600">heute <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider ml-0.5">(Te)</span></span> 
+                            <span class="font-bold text-purple-600">wegen des Jobs <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider ml-0.5">(Ka)</span></span> 
+                            <span class="font-bold text-orange-600">mit dem Zug <span class="text-[10px] font-bold text-orange-400 uppercase tracking-wider ml-0.5">(Mo)</span></span> 
+                            <span class="font-bold text-emerald-600">nach Berlin <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider ml-0.5">(Lo)</span></span>.
+                        </p>
+                    </div>
+                </div>
+            `);
+        };
+
         function switchSettingsTab(tab) {
             ['general', 'stories', 'review'].forEach(t => {
                 const btn = document.getElementById(`tab-settings-${t}`);
@@ -2312,7 +3381,7 @@
                 window.vocabCategories.unshift(newCat); 
                 window.closeAIModal();
                 
-                if (window.currentTab === 'vocabulary') {
+                if (window.isVocabView) {
                     window.renderVocabularyTab();
                 }
             } else {
@@ -2543,6 +3612,7 @@
         window.openSettingsPage = openSettingsPage;
         window.closeSettingsPage = closeSettingsPage;
         window.switchSettingsTab = switchSettingsTab;
+        window.showTeKaMoLoHelp = window.showTeKaMoLoHelp;
         window.selectLevel = selectLevel;
         window.closeAIModal = closeAIModal;
         window.openCreateStoryModal = openCreateStoryModal; 
@@ -2587,6 +3657,11 @@
         window.renderFilteredStories = renderFilteredStories;
         window.closeFilteredStories = closeFilteredStories;
         window.openStoryFromFilter = openStoryFromFilter;
+        window.renderSpeechTab = renderSpeechTab;
+        window.renderSpeechExerciseView = renderNewSpeechExerciseView;
+        window.openSpeechSession = openSpeechSession;
+        window.closeSpeechSession = closeSpeechSession;
+        window.openSpeechLesson = openSpeechLesson;
 
         if (document.readyState === "loading") {
             document.addEventListener('DOMContentLoaded', () => {
